@@ -5,7 +5,7 @@
         pyArchInit Plugin  - A QGIS plugin to manage archaeological dataset
                              -------------------
     begin                : 2007-12-01
-    copyright            : (C) 2008 by Luca Mandolesi
+    copyright            : (C) 2008 by Luca Mandolesi; Enzo Cocca <enzo.ccc@gmail.com>
     email                : mandoluca at gmail.com
  ***************************************************************************/
 
@@ -25,11 +25,22 @@ from builtins import object
 from builtins import range
 from builtins import str
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import (A4,A3)
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch, cm, mm
 from reportlab.pdfgen import canvas
-from reportlab.platypus import Table, PageBreak, SimpleDocTemplate, TableStyle, Image
+from reportlab.platypus import Table, PageBreak, SimpleDocTemplate, Spacer, TableStyle, Image
 from reportlab.platypus.paragraph import Paragraph
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.pdfmetrics import registerFontFamily
+from reportlab.pdfbase.ttfonts import TTFont
+# Registered font family
+pdfmetrics.registerFont(TTFont('Cambria', 'Cambria.ttc'))
+pdfmetrics.registerFont(TTFont('cambriab', 'cambriab.ttf'))
+pdfmetrics.registerFont(TTFont('VeraIt', 'VeraIt.ttf'))
+pdfmetrics.registerFont(TTFont('VeraBI', 'VeraBI.ttf'))
+# Registered fontfamily
+registerFontFamily('Cambria',normal='Cambria')
 from ..db.pyarchinit_conn_strings import Connection
 from .pyarchinit_OS_utility import *
 
@@ -56,7 +67,7 @@ class NumberedCanvas_Individuisheet(canvas.Canvas):
         canvas.Canvas.save(self)
 
     def draw_page_number(self, page_count):
-        self.setFont("Helvetica", 8)
+        self.setFont("Cambria", 5)
         self.drawRightString(200 * mm, 20 * mm,
                              "Pag. %d di %d" % (self._pageNumber, page_count))  # scheda us verticale 200mm x 20 mm
 
@@ -83,7 +94,7 @@ class NumberedCanvas_Individuiindex(canvas.Canvas):
         canvas.Canvas.save(self)
 
     def draw_page_number(self, page_count):
-        self.setFont("Helvetica", 8)
+        self.setFont("Cambria", 5)
         self.drawRightString(270 * mm, 10 * mm,
                              "Pag. %d di %d" % (self._pageNumber, page_count))  # scheda us verticale 200mm x 20 mm
 
@@ -107,11 +118,11 @@ class Individui_index_pdf_sheet(object):
         styNormal.spaceBefore = 20
         styNormal.spaceAfter = 20
         styNormal.alignment = 0  # LEFT
-        styNormal.fontSize = 9
-
+        styNormal.fontSize = 7
+        styNormal.fonName='Cambria'
         # self.unzip_rapporti_stratigrafici()
 
-        individuo = Paragraph("<b>Nr Individuo</b><br/>" + str(self.nr_individuo), styNormal)
+        individuo = Paragraph("<b>N° individuo</b><br/>" + str(self.nr_individuo), styNormal)
         sigla = Paragraph("<b>Struttura</b><br/>" + str(self.sigla_struttura) +'-'+ str(self.nr_struttura), styNormal)
         
         if self.area == None:
@@ -154,8 +165,8 @@ class Individui_index_pdf_sheet(object):
         styNormal.spaceBefore = 20
         styNormal.spaceAfter = 20
         styNormal.alignment = 0  # LEFT
-        styNormal.fontSize = 9
-
+        styNormal.fontSize = 7
+        styNormal.fonName='Cambria'
         # self.unzip_rapporti_stratigrafici()
 
         individuo = Paragraph("<b>Nr Individuel</b><br/>" + str(self.nr_individuo), styNormal)
@@ -199,8 +210,8 @@ class Individui_index_pdf_sheet(object):
         styNormal.spaceBefore = 20
         styNormal.spaceAfter = 20
         styNormal.alignment = 0  # LEFT
-        styNormal.fontSize = 9
-
+        styNormal.fontSize = 7
+        styNormal.fontName='Cambria'
         # self.unzip_rapporti_stratigrafici()
 
         individuo = Paragraph("<b>Individal Nr.</b><br/>" + str(self.nr_individuo), styNormal)
@@ -283,13 +294,15 @@ class single_Individui_pdf_sheet(object):
         styNormal.spaceBefore = 20
         styNormal.spaceAfter = 20
         styNormal.alignment = 0  # LEFT
-
+        styNormal.fontName='Cambria'
+        styNormal.fontSize= 7
         styleSheet = getSampleStyleSheet()
         styDescrizione = styleSheet['Normal']
         styDescrizione.spaceBefore = 20
         styDescrizione.spaceAfter = 20
         styDescrizione.alignment = 4  # Justified
-
+        styDescrizione.fontName='Cambria'
+        styDescrizione.fontSize=7
         """
         #format labels
         self.id_scheda_ind = data[0]
@@ -306,7 +319,7 @@ class single_Individui_pdf_sheet(object):
         self.osservazioni = data[11]
         """
         # 0 row
-        intestazione = Paragraph("<b>SCHEDA INDIVIDUI<br/>" + str(self.datestrfdate()) + "</b>", styNormal)
+        intestazione = Paragraph("<b>SCHEDA INDIVIDUI</b>", styNormal)
         # intestazione2 = Paragraph("<b>pyArchInit</b>", styNormal)
 
         home = os.environ['PYARCHINIT_HOME']
@@ -330,15 +343,15 @@ class single_Individui_pdf_sheet(object):
         sito = Paragraph("<b>Sito</b><br/>" + str(self.sito), styNormal)
         area = Paragraph("<b>Area</b><br/>" + str(self.area), styNormal)
         us = Paragraph("<b>US</b><br/>" + str(self.us), styNormal)
-        nr_inventario = Paragraph("<b>Nr. Individuo</b><br/>" + str(self.nr_individuo), styNormal)
+        nr_inventario = Paragraph("<b>N° Individuo</b><br/>" + str(self.nr_individuo), styNormal)
 
         # 2 row
         sesso = Paragraph("<b>Sesso</b><br/>" + self.sesso, styNormal)
 
         if str(self.eta_min) == "None":
-            eta_min = Paragraph("<b>Eta' Minima</b><br/>", styNormal)
+            eta_min = Paragraph("<b>Eta' minima</b><br/>", styNormal)
         else:
-            eta_min = Paragraph("<b>Eta' Minima</b><br/>" + str(self.eta_min), styNormal)
+            eta_min = Paragraph("<b>Eta' minima</b><br/>" + str(self.eta_min), styNormal)
 
         if str(self.eta_max) == "None":
             eta_max = Paragraph("<b>Eta' massima</b><br/>", styNormal)
@@ -369,8 +382,8 @@ class single_Individui_pdf_sheet(object):
             # 12 row
         data_schedatura = Paragraph("<b>Data schedatura</b><br/>" + self.data_schedatura, styNormal)
         schedatore = Paragraph("<b>Schedatore</b><br/>" + self.schedatore, styNormal)
-        sigla_struttura = Paragraph("<b>Sigla Struttura</b><br/>" + self.sigla_struttura, styNormal)
-        nr_struttura = Paragraph("<b>N. Struttura</b><br/>" + self.nr_struttura, styNormal)
+        sigla_struttura = Paragraph("<b>Sigla struttura</b><br/>" + self.sigla_struttura, styNormal)
+        nr_struttura = Paragraph("<b>N° Struttura</b><br/>" + self.nr_struttura, styNormal)
         completo = Paragraph("<b>Completo</b><br/>" + self.completo, styNormal)
         disturbato = Paragraph("<b>Disturbato</b><br/>" + self.disturbato, styNormal)
         connessione = Paragraph("<b>In connessione</b><br/>" + self.connessione, styNormal)
@@ -515,7 +528,7 @@ class single_Individui_pdf_sheet(object):
         sito = Paragraph("<b>Ausgrabungsstätte</b><br/>" + str(self.sito), styNormal)
         area = Paragraph("<b>Areal</b><br/>" + str(self.area), styNormal)
         us = Paragraph("<b>SE</b><br/>" + str(self.us), styNormal)
-        nr_inventario = Paragraph("<b>Nr. Individuel</b><br/>" + str(self.nr_individuo), styNormal)
+        nr_inventario = Paragraph("<b>N° Individuel</b><br/>" + str(self.nr_individuo), styNormal)
 
         # 2 row
         sesso = Paragraph("<b>Sesso</b><br/>" + self.sesso, styNormal)
@@ -794,12 +807,12 @@ class generate_pdf(object):
         styNormal = styleSheet['Normal']
         styBackground = ParagraphStyle('background', parent=styNormal, backColor=colors.pink)
         styH1 = styleSheet['Heading3']
-
+        styH1.fontName='Cambria'
         data = self.datestrfdate()
 
         lst = []
         lst.append(logo)
-        lst.append(Paragraph("<b>ELENCO INDIVIDUI</b><br/><b>Scavo: %s<br/> Data: %s</b>" % (sito, data), styH1))
+        lst.append(Paragraph("<b>ELENCO INDIVIDUI</b><br/><b>Scavo: %s</b>" % (sito), styH1))
 
         table_data = []
         for i in range(len(records)):
@@ -815,7 +828,7 @@ class generate_pdf(object):
         lst.append(table_data_formatted)
         # lst.append(Spacer(0,2))
 
-        filename = '{}{}{}'.format(self.PDF_path, os.sep, 'Elenco individui.pdf')
+        filename = '{}{}{}'.format(self.PDF_path, os.sep, 'Elenco Individui.pdf')
         f = open(filename, "wb")
 
         doc = SimpleDocTemplate(f, pagesize=(29 * cm, 21 * cm), showBoundary=0)

@@ -6,7 +6,7 @@
                              stored in Postgres
                              -------------------
     begin                : 2007-12-01
-    copyright            : (C) 2008 by Luca Mandolesi
+    copyright            : (C) 2008 by Luca Mandolesi; Enzo Cocca <enzo.ccc@gmail.com>
     email                : mandoluca at gmail.com
  ***************************************************************************/
 
@@ -25,12 +25,24 @@ from datetime import date
 
 from .pyarchinit_OS_utility import *
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import (A4,A3)
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch, cm, mm
 from reportlab.pdfgen import canvas
-from reportlab.platypus import Table, PageBreak, SimpleDocTemplate, TableStyle, Image
+from reportlab.platypus import Table, PageBreak, SimpleDocTemplate, Spacer, TableStyle, Image
 from reportlab.platypus.paragraph import Paragraph
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.pdfmetrics import registerFontFamily
+from reportlab.pdfbase.ttfonts import TTFont
+# Registered font family
+pdfmetrics.registerFont(TTFont('Cambria', 'Cambria.ttc'))
+pdfmetrics.registerFont(TTFont('cambriab', 'cambriab.ttf'))
+pdfmetrics.registerFont(TTFont('VeraIt', 'VeraIt.ttf'))
+pdfmetrics.registerFont(TTFont('VeraBI', 'VeraBI.ttf'))
+# Registered fontfamily
+registerFontFamily('Cambria',normal='Cambria')
 from ..db.pyarchinit_conn_strings import Connection
+from .pyarchinit_OS_utility import *
 
 class NumberedCanvas_Documentazionesheet(canvas.Canvas):
     def __init__(self, *args, **kwargs):
@@ -54,7 +66,7 @@ class NumberedCanvas_Documentazionesheet(canvas.Canvas):
         canvas.Canvas.save(self)
 
     def draw_page_number(self, page_count):
-        self.setFont("Helvetica", 8)
+        self.setFont("Cambria", 5)
         self.drawRightString(200 * mm, 20 * mm,
                              "Pag. %d di %d" % (self._pageNumber, page_count))  # scheda us verticale 200mm x 20 mm
 
@@ -81,7 +93,7 @@ class NumberedCanvas_Documentazioneindex(canvas.Canvas):
         canvas.Canvas.save(self)
 
     def draw_page_number(self, page_count):
-        self.setFont("Helvetica", 8)
+        self.setFont("Cambria", 5)
         self.drawRightString(270 * mm, 10 * mm,
                              "Pag. %d di %d" % (self._pageNumber, page_count))  # scheda us verticale 200mm x 20 mm
 
@@ -109,7 +121,7 @@ class NumberedCanvas_CASSEindex(canvas.Canvas):
         canvas.Canvas.save(self)
 
     def draw_page_number(self, page_count):
-        self.setFont("Helvetica", 8)
+        self.setFont("Cambria", 8)
         self.drawRightString(270*mm, 10*mm, "Pag. %d di %d" % (self._pageNumber, page_count)) #scheda us verticale 200mm x 20 mm
 
 '''
@@ -139,17 +151,20 @@ class single_Documentazione_pdf_sheet:
         styNormal.spaceBefore = 20
         styNormal.spaceAfter = 20
         styNormal.alignment = 0  # LEFT
-
+        styNormal.fontSize = 7
+        styNormal.fontName = 'Cambria'
         styleSheet = getSampleStyleSheet()
         styDescrizione = styleSheet['Normal']
         styDescrizione.spaceBefore = 20
         styDescrizione.spaceAfter = 20
         styDescrizione.alignment = 4  # Justified
+        styDescrizione.fontSize = 7
+        styDescrizione.fontName = 'Cambria'
 
         # format labels
 
         # 0 row
-        intestazione = Paragraph("<b>SCHEDA DOCUMENTAZIONE<br/>" + str(self.datestrfdate()) + "</b>", styNormal)
+        intestazione = Paragraph("<b>SCHEDA DOCUMENTAZIONE<br/></b>", styNormal)
 
         home = os.environ['PYARCHINIT_HOME']
 
@@ -183,7 +198,7 @@ class single_Documentazione_pdf_sheet:
 
         # 4 row
         note = Paragraph("<b>Note</b><br/>" + str(self.note), styDescrizione)
-        #       nr_cassa = Paragraph("<b>Nr. Cassa</b><br/>" + unicode(self.nr_cassa), styNormal)
+        #       nr_cassa = Paragraph("<b>N° Cassa</b><br/>" + unicode(self.nr_cassa), styNormal)
 
         # schema
         cell_schema = [  # 00, 01, 02, 03, 04, 05, 06, 07, 08, 09 rows
@@ -278,7 +293,7 @@ class single_Documentazione_pdf_sheet:
 
         # 4 row
         note = Paragraph("<b>Notes</b><br/>" + str(self.note), styDescrizione)
-        #       nr_cassa = Paragraph("<b>Nr. Cassa</b><br/>" + unicode(self.nr_cassa), styNormal)
+        #       nr_cassa = Paragraph("<b>N° Cassa</b><br/>" + unicode(self.nr_cassa), styNormal)
 
         # schema
         cell_schema = [  # 00, 01, 02, 03, 04, 05, 06, 07, 08, 09 rows
@@ -373,7 +388,7 @@ class single_Documentazione_pdf_sheet:
 
         # 4 row
         note = Paragraph("<b>Note</b><br/>" + str(self.note), styDescrizione)
-        #       nr_cassa = Paragraph("<b>Nr. Cassa</b><br/>" + unicode(self.nr_cassa), styNormal)
+        #       nr_cassa = Paragraph("<b>N° Cassa</b><br/>" + unicode(self.nr_cassa), styNormal)
 
         # schema
         cell_schema = [  # 00, 01, 02, 03, 04, 05, 06, 07, 08, 09 rows
@@ -478,13 +493,13 @@ class Box_labels_Campioni_pdf_sheet:
         logo.drawWidth = 1.5*inch
         
 
-        num_cassa = Paragraph("<b>N. Cassa </b>" + str(self.cassa),styCassaLabel)
+        num_cassa = Paragraph("<b>N° Cassa </b>" + str(self.cassa),styCassaLabel)
         sito = Paragraph("<b>Sito: </b>" + str(self.sito),stySitoLabel)
 
         if self.elenco_inv_tip_rep == None:
-            elenco_inv_tip_rep = Paragraph("<b>Elenco N. Inv. / Tipo campione</b><br/>",styNormal)
+            elenco_inv_tip_rep = Paragraph("<b>Elenco N° Inv. / Tipo campione</b><br/>",styNormal)
         else:
-            elenco_inv_tip_rep = Paragraph("<b>Elenco N. Inv. / Tipo campione</b><br/>" + str(self.elenco_inv_tip_rep ),styNormal)
+            elenco_inv_tip_rep = Paragraph("<b>Elenco N° Inv. / Tipo campione</b><br/>" + str(self.elenco_inv_tip_rep ),styNormal)
 
         if self.elenco_us == None:
             elenco_us = Paragraph("<b>Elenco US/(Struttura)</b>",styNormal)
@@ -557,9 +572,9 @@ class CASSE_index_pdf_sheet:
         num_cassa = Paragraph("<b>Nr.</b><br/>" + str(self.cassa),styNormal)
 
         if self.elenco_inv_tip_camp == None:
-            elenco_inv_tip_camp = Paragraph("<b>N. Inv./Tipo campione</b><br/>",styNormal)
+            elenco_inv_tip_camp = Paragraph("<b>N° Inv./Tipo campione</b><br/>",styNormal)
         else:
-            elenco_inv_tip_camp = Paragraph("<b>N. Inv./Tipo campione</b><br/>" + str(self.elenco_inv_tip_camp ),styNormal)
+            elenco_inv_tip_camp = Paragraph("<b>N° Inv./Tipo campione</b><br/>" + str(self.elenco_inv_tip_camp ),styNormal)
 
         if self.elenco_us == None:
             elenco_us = Paragraph("<b>US(Struttura)</b><br/>",styNormal)
@@ -602,11 +617,11 @@ class Documentazione_index_pdf_sheet:
         styNormal.spaceBefore = 20
         styNormal.spaceAfter = 20
         styNormal.alignment = 0  # LEFT
-        styNormal.fontSize = 9
-
+        styNormal.fontSize = 7
+        styNormal.fontName = 'Cambria'
         # self.unzip_rapporti_stratigrafici()
 
-        #       num_campione = Paragraph("<b>N. Camp.</b><br/>" + str(self.numero_campione),styNormal)
+        #       num_campione = Paragraph("<b>N° Camp.</b><br/>" + str(self.numero_campione),styNormal)
 
 
         if self.tipo_documentazione == "":
@@ -659,11 +674,11 @@ class Documentazione_index_pdf_sheet:
         styNormal.spaceBefore = 20
         styNormal.spaceAfter = 20
         styNormal.alignment = 0  # LEFT
-        styNormal.fontSize = 9
+        styNormal.fontSize = 7
 
         # self.unzip_rapporti_stratigrafici()
 
-        #       num_campione = Paragraph("<b>N. Camp.</b><br/>" + str(self.numero_campione),styNormal)
+        #       num_campione = Paragraph("<b>N° Camp.</b><br/>" + str(self.numero_campione),styNormal)
 
 
         if self.tipo_documentazione == "":
@@ -717,11 +732,11 @@ class Documentazione_index_pdf_sheet:
         styNormal.spaceBefore = 20
         styNormal.spaceAfter = 20
         styNormal.alignment = 0  # LEFT
-        styNormal.fontSize = 9
+        styNormal.fontSize = 7
 
         # self.unzip_rapporti_stratigrafici()
 
-        #       num_campione = Paragraph("<b>N. Camp.</b><br/>" + str(self.numero_campione),styNormal)
+        #       num_campione = Paragraph("<b>N° Camp.</b><br/>" + str(self.numero_campione),styNormal)
 
 
         if self.tipo_documentazione == "":
@@ -791,7 +806,7 @@ class generate_documentazione_pdf:
             single_Documentazione_sheet = single_Documentazione_pdf_sheet(records[i])
             elements.append(single_Documentazione_sheet.create_sheet())
             elements.append(PageBreak())
-        filename = '{}{}{}'.format(self.PDF_path, os.sep, 'scheda_Documentazione.pdf')
+        filename = '{}{}{}'.format(self.PDF_path, os.sep, 'Scheda Documentazione.pdf')
         f = open(filename, "wb")
         doc = SimpleDocTemplate(f)
         doc.build(elements, canvasmaker=NumberedCanvas_Documentazionesheet)
@@ -839,12 +854,12 @@ class generate_documentazione_pdf:
         styNormal = styleSheet['Normal']
         styBackground = ParagraphStyle('background', parent=styNormal, backColor=colors.pink)
         styH1 = styleSheet['Heading3']
-
+        styH1.fontName='Cambria'
         data = self.datestrfdate()
 
         lst = []
         lst.append(logo)
-        lst.append(Paragraph("<b>ELENCO DOCUMENTAZIONE</b><br/><b>Scavo: %s,  Data: %s</b>" % (sito, data), styH1))
+        lst.append(Paragraph("<b>ELENCO DOCUMENTAZIONE</b><br/><b>Scavo: %s</b>" % (sito), styH1))
 
         table_data = []
         for i in range(len(records)):
@@ -860,7 +875,7 @@ class generate_documentazione_pdf:
         lst.append(table_data_formatted)
         # lst.append(Spacer(0,2))
 
-        filename = '{}{}{}'.format(self.PDF_path, os.sep, 'elenco_documentazione.pdf')
+        filename = '{}{}{}'.format(self.PDF_path, os.sep, 'Elenco Documentazione.pdf')
         f = open(filename, "wb")
 
         doc = SimpleDocTemplate(f, pagesize=(29 * cm, 21 * cm), showBoundary=0)
