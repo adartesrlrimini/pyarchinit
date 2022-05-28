@@ -1,3 +1,4 @@
+
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
@@ -855,10 +856,10 @@ class pyarchinit_Struttura(QDialog, MAIN_DIALOG_CLASS):
                 QMessageBox.information(self, "Attenzione" ,"Non esiste questo sito: "'"'+ str(sito_set_str) +'"'" in questa scheda, Per favore distattiva la 'scelta sito' dalla scheda di configurazione plugin per vedere tutti i record oppure crea la scheda",QMessageBox.Ok) 
             elif self.L=='de':
             
-                QMessageBox.information(self, "Warnung" , "Es gibt keine solche archäologische Stätte: "'""'+ str(site_set_str) +'"'" in dieser Registerkarte, Bitte deaktivieren Sie die 'Site-Wahl' in der Plugin-Konfigurationsregisterkarte, um alle Datensätze zu sehen oder die Registerkarte zu erstellen",QMessageBox.Ok) 
+                QMessageBox.information(self, "Warnung" , "Es gibt keine solche archäologische Stätte: "'""'+ str(sito_set_str) +'"'" in dieser Registerkarte, Bitte deaktivieren Sie die 'Site-Wahl' in der Plugin-Konfigurationsregisterkarte, um alle Datensätze zu sehen oder die Registerkarte zu erstellen",QMessageBox.Ok) 
             else:
             
-                QMessageBox.information(self, "Warning" , "There is no such site: "'"'+ str(site_set_str) +'"'" in this tab, Please disable the 'site choice' from the plugin configuration tab to see all records or create the tab",QMessageBox.Ok)  
+                QMessageBox.information(self, "Warning" , "There is no such site: "'"'+ str(sito_set_str) +'"'" in this tab, Please disable the 'site choice' from the plugin configuration tab to see all records or create the tab",QMessageBox.Ok)  
     def charge_periodo_iniz_list(self):
         sito = str(self.comboBox_sito.currentText())
         # sitob = sito.decode('utf-8')
@@ -1060,22 +1061,22 @@ class pyarchinit_Struttura(QDialog, MAIN_DIALOG_CLASS):
         if bool(self.DATA_LIST):
             if self.data_error_check() == 1:
                 pass
-            else:
-                if self.BROWSE_STATUS == "b":
-                    if bool(self.DATA_LIST):
-                        if self.records_equal_check() == 1:
-                            if self.L=='it':
-                                self.update_if(QMessageBox.warning(self, 'Errore',
-                                                                   "Il record e' stato modificato. Vuoi salvare le modifiche?",QMessageBox.Ok | QMessageBox.Cancel))
-                            elif self.L=='de':
-                                self.update_if(QMessageBox.warning(self, 'Error',
-                                                                   "Der Record wurde geändert. Möchtest du die Änderungen speichern?",
-                                                                   QMessageBox.Ok | QMessageBox.Cancel))
+            # else:
+                # if self.BROWSE_STATUS == "b":
+                    # if bool(self.DATA_LIST):
+                        # if self.records_equal_check() == 1:
+                            # if self.L=='it':
+                                # self.update_if(QMessageBox.warning(self, 'Errore',
+                                                                   # "Il record e' stato modificato. Vuoi salvare le modifiche?",QMessageBox.Ok | QMessageBox.Cancel))
+                            # elif self.L=='de':
+                                # self.update_if(QMessageBox.warning(self, 'Error',
+                                                                   # "Der Record wurde geändert. Möchtest du die Änderungen speichern?",
+                                                                   # QMessageBox.Ok | QMessageBox.Cancel))
                                                                    
-                            else:
-                                self.update_if(QMessageBox.warning(self, 'Error',
-                                                                   "The record has been changed. Do you want to save the changes?",
-                                                                   QMessageBox.Ok | QMessageBox.Cancel))
+                            # else:
+                                # self.update_if(QMessageBox.warning(self, 'Error',
+                                                                   # "The record has been changed. Do you want to save the changes?",
+                                                                   # QMessageBox.Ok | QMessageBox.Cancel))
                             # set the GUI for a new record
         if self.BROWSE_STATUS != "n":
             if bool(self.comboBox_sito.currentText()) and self.comboBox_sito.currentText()==sito_set_str:
@@ -1083,7 +1084,7 @@ class pyarchinit_Struttura(QDialog, MAIN_DIALOG_CLASS):
                 self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
                 self.empty_fields_nosite()
                 self.label_sort.setText(self.SORTED_ITEMS["n"])
-
+                self.SORT_STATUS = "n"
                 #self.setComboBoxEditable(["self.comboBox_sito"], 1)
                 self.setComboBoxEditable(["self.comboBox_sigla_struttura"], 0)
                 self.setComboBoxEnable(["self.comboBox_sito"], False)
@@ -1094,6 +1095,7 @@ class pyarchinit_Struttura(QDialog, MAIN_DIALOG_CLASS):
             else:
                 self.BROWSE_STATUS = "n"
                 self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
+                self.label_sort.setText(self.SORTED_ITEMS[self.SORT_STATUS])
                 self.empty_fields()
                 self.label_sort.setText(self.SORTED_ITEMS["n"])
 
@@ -1124,6 +1126,7 @@ class pyarchinit_Struttura(QDialog, MAIN_DIALOG_CLASS):
                         self.update_if(QMessageBox.warning(self, 'Error',
                                                            "The record has been changed. Do you want to save the changes?",
                                                            QMessageBox.Ok | QMessageBox.Cancel))
+                    self.empty_fields()
                     self.SORT_STATUS = "n"
                     self.label_sort.setText(self.SORTED_ITEMS[self.SORT_STATUS])
                     self.enable_button(1)
@@ -1972,9 +1975,10 @@ class pyarchinit_Struttura(QDialog, MAIN_DIALOG_CLASS):
             sub_list = []
             for c in range(col):
                 value = eval(self.tablename + ".item(r,c)")
-                if bool(value):
+                if value != None:
                     sub_list.append(str(value.text()))
-            lista.append(sub_list)
+            if bool(sub_list):
+                lista.append(sub_list)
         return lista
 
     def setTableEnable(self, t, v):
@@ -2310,3 +2314,4 @@ if __name__ == "__main__":
     ui = pyarchinit_US()
     ui.show()
     sys.exit(app.exec_())
+
