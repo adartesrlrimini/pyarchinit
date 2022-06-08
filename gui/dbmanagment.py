@@ -33,10 +33,10 @@ from builtins import str
 from ..modules.utility.pyarchinit_OS_utility import Pyarchinit_OS_Utility
 from ..modules.utility.settings import Settings
 from ..modules.db.pyarchinit_conn_strings import Connection
-
+from qgis.core import *
 from qgis.PyQt import QtCore
 from qgis.PyQt.QtCore import QRectF, pyqtSignal, QObject,pyqtSlot,Qt
-from qgis.PyQt.QtWidgets import QApplication, QDialog, QMessageBox,  QProgressDialog, QProgressBar,QWidget,QLabel,QVBoxLayout
+from qgis.PyQt.QtWidgets import QApplication, QDialog, QMessageBox,  QProgressDialog, QProgressBar,QWidget,QLabel,QVBoxLayout, QFileDialog
 from qgis.PyQt.uic import loadUiType
 
 MAIN_DIALOG_CLASS, _ = loadUiType(os.path.join(os.path.dirname(__file__), 'ui', 'dbmanagment.ui'))
@@ -46,15 +46,13 @@ class pyarchinit_dbmanagment(QDialog, MAIN_DIALOG_CLASS):
     
     MSG_BOX_TITLE = \
         'PyArchInit - pyarchinit_version 0.4 - Scheda gestione DB'
-
+    HOME = os.environ['PYARCHINIT_HOME']
+    BK = '{}{}{}'.format(HOME, os.sep, "pyarchinit_db_backup")
     def __init__(self, iface):
         super().__init__()
         self.iface = iface
         self.setupUi(self)
-        QMessageBox.warning(self, 'Alert',
-                            'Sistema sperimentale solo per lo sviluppo'
-                            , QMessageBox.Ok)
-
+        
         # self.customize_GUI() #call for GUI customizations
 
         self.currentLayerId = None
@@ -80,12 +78,35 @@ class pyarchinit_dbmanagment(QDialog, MAIN_DIALOG_CLASS):
         # conn_import = '%s%s%s' % (home, os.sep,
                                   # 'pyarchinit_DB_folder/pyarchinit_db.sqlite'
                                   # )
-        conn_export = '%s%s%s' % (home, os.sep,
-                                  'pyarchinit_db_backup/pyarchinit_db_'
-                                  + time.strftime('%Y%m%d_%H_%M_%S_')
-                                  + '.sqlite')
+        
+        
+        
+        #conn_export = '%s%s%s' % (home, os.sep,
+                                  #'pyarchinit_db_backup/pyarchinit_db_'
+                                  #+ time.strftime('%Y%m%d_%H_%M_%S_')
+                                  #+ '.sqlite')
        
         
+        PDF_path = '%s%s%s' % (home, os.sep, 'pyarchinit_db_backup/')
+        
+        cfg_rel_path = os.path.join(os.sep, 'pyarchinit_DB_folder', 'config.cfg')
+        file_path = '{}{}'.format(home, cfg_rel_path)
+        conf = open(file_path, "r")
+
+        data = conf.read()
+        settings = Settings(data)
+        settings.set_configuration()
+        conf.close()    
+        
+        dump_dir = PDF_path
+        db_username = settings.USER
+        host = settings.HOST
+        port = settings.PORT
+        database_password=settings.PASSWORD
+        
+        db_names = settings.DATABASE
+        conn_export = '%s' % (dump_dir+'backup_'+db_names)
+                                 
         b=shutil.copy(a,conn_export)
     
         i = 0
@@ -142,19 +163,19 @@ class pyarchinit_dbmanagment(QDialog, MAIN_DIALOG_CLASS):
         
         db_names = settings.DATABASE
 
-        file_path = ''
-        dumper = ' -U %s -Z 9 -f %s -F c %s  '
+        
+        dumper = '-U %s -h %s -p %s -Z 9 -f %s -Fc %s'
 
         bkp_file = '%s_%s.backup' % (db_names,
                                   time.strftime('%Y%m%d_%H_%M'))
 
         file_path = os.path.join(dump_dir, bkp_file)
-        command = 'pg_dump' + dumper % (db_username, file_path,
-                                        db_names)
-        subprocess.call(command, shell=True)
-        # return p.communicate('{}\n'.format(database_password))
-
-        subprocess.call('gzip ' + file_path, shell=True)
+        command = 'pg_dump ' + dumper % (db_username, host, port, file_path,db_names)
+        try:
+            p=subprocess.Popen(command, shell=False)
+        except Exception as e :
+            QMessageBox.warning(self, "INFO", str(e), QMessageBox.Ok)
+        #subprocess.call('gzip ' + file_path, shell=False)
         
         i = 0
     
@@ -243,30 +264,71 @@ class pyarchinit_dbmanagment(QDialog, MAIN_DIALOG_CLASS):
                                     # 'Backup fallito!!' + str(e),
                                     # QMessageBox.Ok)
 
+    
     def on_upload_pressed(self):
-        self.percorso = QFileDialog.getOpenFileName(self,
-                                                          'Open file', '/')
-
-        # QMessageBox.warning(self, "Messaggio", str(self.FILE), QMessageBox.Ok)
-
+        s = QgsSettings()
+        dbpath = QFileDialog.getOpenFileName(
+            self,
+            "Set file name",
+            self.BK,
+            " backup (*.backup)"
+        )[0]
+        #filename=dbpath.split("/")[-1]
+        if dbpath:
+            self.lineEdit_bk_path.setText(dbpath)
+            s.setValue('',dbpath)
+        
     def on_restore_pressed(self):
         try:
 
-            barra = QProgressBar(self)
-            barra.show()
-            barra.setMinimum(0)
-            barra.setMaximum(9)
-            for a in range(10):
-                time.sleep(1)
-                barra.setValue(a)
+            # barra = QProgressBar(self)
+            # barra.show()
+            # barra.setMinimum(0)
+            # barra.setMaximum(9)
+            # for a in range(10):
+                # time.sleep(1)
+                # barra.setValue(a)
 
-            path = self.percorso
-            os.popen('dropdb -U postgres pyarchinit')
-            os.popen('createdb -U postgres -p 5432 -h localhost -E UTF8  -T template_postgis_20 -e pyarchinit'
-                     )
-            os.popen(
-                'pg_restore --host localhost --port 5432 --username postgres --dbname pyarchinit --role postgres --no-password  --verbose %s'
-                % str(path))
+            path = self.lineEdit_bk_path.text()
+            
+            home = os.environ['PYARCHINIT_HOME']
+
+            BK_path = '%s%s%s' % (home, os.sep, 'pyarchinit_db_backup/')
+            
+            cfg_rel_path = os.path.join(os.sep, 'pyarchinit_DB_folder', 'config.cfg')
+            file_path = '{}{}'.format(home, cfg_rel_path)
+            conf = open(file_path, "r")
+
+            data = conf.read()
+            settings = Settings(data)
+            settings.set_configuration()
+            conf.close()    
+            
+            dump_dir = BK_path
+            db_username = self.lineEdit_username_wt.text()
+            host = self.lineEdit_host_wt.text()
+            port = self.lineEdit_port_wt.text()
+            database_password=self.lineEdit_pass_wt.text()
+            
+            db_names = self.lineEdit_database_wt.text()
+            #os.popen('dropdb -U postgres pyarchinit')
+            drop = '-h %s -p %s -U %s %s'
+            command1 ='dropdb ' + drop%(host,port,db_username,db_names)
+            try:
+                subprocess.call(command1, shell=False)
+            except:
+                pass
+            create = '-h %s -p %s -U %s -e %s -E UTF8 -T template_postgis'
+            command2 = 'createdb ' + create%(host,port,db_username,db_names)
+            subprocess.call(command2, shell=False)
+            
+            #os.popen('createdb -U postgres -p 5432 -h localhost -E UTF8  -T template_postgis_20 -e pyarchinit')
+            restore='--host %s --port %s --username %s --dbname %s --role postgres  %s'
+            command= 'pg_restore ' + restore %(host,port,db_username,db_names, path)
+            
+            
+            subprocess.call(command, shell=False)
+                
             QMessageBox.warning(self, 'Messaggio',
                                 'Ripristino completato', QMessageBox.Ok)
         except Exception as e:
